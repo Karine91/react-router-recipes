@@ -5,10 +5,19 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useMatches,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { useEffect } from "react";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "React Router Recipes" },
+    { name: "description", content: "Welcome to React Router Recipes App!" },
+  ];
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -42,7 +51,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const matches = useMatches();
+  useEffect(() => {
+    console.log(matches);
+  }, []);
+  return (
+    <>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/settings">Settings</a>
+        <a href="/discover">Discover</a>
+        <a href="/app">App</a>
+      </nav>
+      <Outlet />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
