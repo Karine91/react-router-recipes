@@ -11,6 +11,11 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { useEffect } from "react";
+import AppNavLink from "./components/AppNavLink";
+import { HomeIcon } from "./components/icons/Home";
+import { DiscoverIcon } from "./components/icons/Discover";
+import { RecipeBookIcon } from "./components/icons/RecipeBook";
+import { SettingsIcon } from "./components/icons/Settings";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -46,7 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="md:flex h-screen">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -62,13 +67,25 @@ export default function App() {
   }, []);
   return (
     <>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/settings">Settings</a>
-        <a href="/discover">Discover</a>
-        <a href="/app">App</a>
+      <nav className="bg-primary text-white">
+        <ul className="flex md:flex-col">
+          <AppNavLink to="/">
+            <HomeIcon />
+          </AppNavLink>
+          <AppNavLink to="/settings">
+            <SettingsIcon />
+          </AppNavLink>
+          <AppNavLink to="/discover">
+            <DiscoverIcon />
+          </AppNavLink>
+          <AppNavLink to="/app">
+            <RecipeBookIcon />
+          </AppNavLink>
+        </ul>
       </nav>
-      <Outlet />
+      <div className="p-4">
+        <Outlet />
+      </div>
     </>
   );
 }
