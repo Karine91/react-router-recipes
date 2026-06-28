@@ -1,5 +1,3 @@
-import { Welcome } from "../welcome/welcome";
-
 export default function Home() {
-  return <Welcome />;
+  return <div>Welcome home</div>;
 }
