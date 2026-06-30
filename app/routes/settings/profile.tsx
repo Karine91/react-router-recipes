@@ -1,9 +1,23 @@
-import React from 'react'
+import React from "react";
+import { useRouteError } from "react-router";
 
-const Profile = () => {
-  return (
-    <div>Profile</div>
-  )
+export function loader() {
+  throw Error("Nested error");
 }
 
-export default Profile
+const Profile = () => {
+  return <div>Profile</div>;
+};
+
+export default Profile;
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  if (error instanceof Error) {
+    return (
+      <div className="bg-red-300 border-2 border-red-600 rounded-md p-2">
+        {error.message}
+      </div>
+    );
+  }
+}
