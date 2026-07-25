@@ -15,9 +15,13 @@ import {
   createShelf,
   deleteShelf,
   getAllShelves,
+  saveShelfName,
 } from "~/models/pantry-shelf.server";
 import { DeleteButton, PrimaryButton } from "~/components/forms/Button";
 import { useEffect, useRef } from "react";
+import { SaveIcon } from "~/components/icons/Save";
+import z from "zod";
+import { validateForm } from "../../../utils/validation";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -26,6 +30,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { shelves };
 }
 
+const saveShelfNameSchema = z.object({
+  shelfId: z.string(),
+  shelfName: z.string().min(1),
+});
+
+const deleteShelfSchema = z.object({
+  id: z.string(),
+});
+
 export const action: ActionFunction = async ({
   request,
 }: ActionFunctionArgs) => {
@@ -33,12 +46,22 @@ export const action: ActionFunction = async ({
   switch (formData.get("_action")) {
     case "createShelf":
       return createShelf();
-    case "deleteShelf":
-      const id = formData.get("shelfId");
-      if (typeof id !== "string") {
-        return { errors: { shelfId: "Shelf ID must be a string" } };
-      }
-      return deleteShelf(id);
+    case "deleteShelf": {
+      return validateForm(
+        formData,
+        deleteShelfSchema,
+        (data) => deleteShelf(data.id),
+        (errors) => ({ errors }),
+      );
+    }
+    case "saveShelfName": {
+      validateForm(
+        formData,
+        saveShelfNameSchema,
+        (data) => saveShelfName(data.shelfId, data.shelfName),
+        (errors) => ({ errors }),
+      );
+    }
     default:
       return null;
   }
@@ -48,11 +71,13 @@ const Pantry = () => {
   const data = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const navigation = useNavigation();
+  const createShelfFetcher = useFetcher();
 
   const containerRef = useRef<HTMLUListElement>(null);
 
   const isSearching = navigation.formData?.has("q");
-  const isCreatingShelf = navigation.formData?.get("_action") === "createShelf";
+  const isCreatingShelf =
+    createShelfFetcher.formData?.get("_action") === "createShelf";
 
   useEffect(() => {
     if (!isCreatingShelf && containerRef.current) {
@@ -62,7 +87,7 @@ const Pantry = () => {
 
   return (
     <div>
-      <Form
+      <createShelfFetcher.Form
         className={clsx(
           "flex border-2 border-gray-300 rounded-md",
           "focus-within:border-primary md:w-80",
@@ -80,7 +105,7 @@ const Pantry = () => {
           placeholder="Search Shelves..."
           className="w-full py-3 px-2 outline-none"
         />
-      </Form>
+      </createShelfFetcher.Form>
       <Form method="post">
         <PrimaryButton
           name="_action"
@@ -122,6 +147,7 @@ type ShelfProps = {
 
 function Shelf({ shelf }: ShelfProps) {
   const deleteShelfFetcher = useFetcher();
+  const saveShelfNameFetcher = useFetcher();
 
   const isDeletingShelf =
     deleteShelfFetcher.formData?.get("_action") === "deleteShelf" &&
@@ -135,7 +161,23 @@ function Shelf({ shelf }: ShelfProps) {
         "md:w-96",
       )}
     >
-      <h1 className="font-extrabold text-2xl mb-2">{shelf.name}</h1>
+      <saveShelfNameFetcher.Form method="post" reloadDocument className="flex">
+        <input
+          type="text"
+          className={clsx(
+            "text-2xl font-extrabold mb-2 w-full outline-none",
+            "border-b-2 focus:border-b-primary border-b-background",
+          )}
+          defaultValue={shelf.name}
+          name="shelfName"
+          placeholder="Shelf name"
+          autoComplete="off"
+        />
+        <button name="_action" value="saveShelfName" className="ml-4">
+          <SaveIcon />
+        </button>
+        <input type="hidden" name="shelfId" value={shelf.id} />
+      </saveShelfNameFetcher.Form>
       <ul>
         {shelf.items.map((item) => (
           <li className="py-2" key={item.id}>

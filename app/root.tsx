@@ -53,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="md:flex h-screen">
+      <body className="md:flex h-screen bg-background">
         {children}
         <ScrollRestoration />
         <Scripts />
