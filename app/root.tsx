@@ -18,6 +18,7 @@ import { HomeIcon } from "./components/icons/Home";
 import { DiscoverIcon } from "./components/icons/Discover";
 import { RecipeBookIcon } from "./components/icons/RecipeBook";
 import { SettingsIcon } from "./components/icons/Settings";
+import { LoginIcon } from "./components/icons/Login";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -69,7 +70,7 @@ export default function App() {
   }, []);
   return (
     <>
-      <nav className="bg-primary text-white">
+      <nav className="bg-primary text-white md:w-16 flex md:flex-col justify-between">
         <ul className="flex md:flex-col">
           <AppNavLink to="/">
             <HomeIcon />
@@ -82,6 +83,11 @@ export default function App() {
           </AppNavLink>
           <AppNavLink to="/app">
             <RecipeBookIcon />
+          </AppNavLink>
+        </ul>
+        <ul>
+          <AppNavLink to="/login">
+            <LoginIcon />
           </AppNavLink>
         </ul>
       </nav>

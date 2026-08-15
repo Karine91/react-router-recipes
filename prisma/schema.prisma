@@ -12,6 +12,19 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  firstName String
+  lastName String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pantryShelves PantryShelf[]
+  pantryItems PantryItem[]
+}
+
 model PantryShelf {
   id String @id @default(cuid())
   name String
@@ -19,15 +32,20 @@ model PantryShelf {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   items PantryItem[]
+  userId String
+  user User @relation(fields: [userId], references: [id])
 }
 
 model PantryItem {
   id String @id @default(cuid())
   name String
   shelfId String
+  userId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   shelf PantryShelf @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
 }
