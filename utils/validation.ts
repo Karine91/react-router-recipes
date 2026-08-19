@@ -1,12 +1,12 @@
-import { unknown, z } from "zod";
+import { z } from "zod";
 type FieldErrors = Record<string, string>;
 
-export function validateForm<T>(
+export function validateForm<T, Success, Error>(
   formData: FormData,
   zodSchema: z.Schema<T>,
-  successFn: (data: T) => unknown,
-  errorFn: (errors: FieldErrors) => unknown,
-) {
+  successFn: (data: T) => Success,
+  errorFn: (errors: FieldErrors) => Error,
+): Success | Error {
   const result = zodSchema.safeParse(Object.fromEntries(formData));
   if (!result.success) {
     const errors: FieldErrors = {};
