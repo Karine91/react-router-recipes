@@ -2,13 +2,11 @@ import clsx from "clsx";
 import {
   useLoaderData,
   useSearchParams,
-  type LoaderFunctionArgs,
   Form,
   useNavigation,
-  type ActionFunction,
-  type ActionFunctionArgs,
   useFetcher,
   data,
+  isRouteErrorResponse,
 } from "react-router";
 import { PlusIcon } from "~/components/icons/Plus";
 import { SearchIcon } from "~/components/icons/Search";
@@ -16,22 +14,31 @@ import {
   createShelf,
   deleteShelf,
   getAllShelves,
+  getShelf,
   saveShelfName,
 } from "~/models/pantry-shelf.server";
 import { DeleteButton, PrimaryButton } from "~/components/forms/Button";
-import { useEffect, useRef, useState, useLayoutEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SaveIcon } from "~/components/icons/Save";
 import z from "zod";
 import { validateForm } from "../../../utils/validation";
 import { ErrorMessage } from "~/components/forms/ErrorMessage";
-import { createShelfItem, deleteShelfItem } from "~/models/pantry-item.server";
+import {
+  createShelfItem,
+  deleteShelfItem,
+  getShelfItem,
+} from "~/models/pantry-item.server";
 import { TrashIcon } from "~/components/icons/Trash";
 import { useIsHydrated, useServerLayoutEffect } from "../../../utils/misc";
+import type { Route } from "./+types";
+import { userContext } from "~/middleware/auth";
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
-  const shelves = await getAllShelves(q);
+  const user = context.get(userContext);
+
+  const shelves = await getAllShelves(user.id, q);
   return { shelves };
 }
 
@@ -55,18 +62,28 @@ const deleteShelfItemSchema = z.object({
   itemId: z.string(),
 });
 
-export const action: ActionFunction = async ({
-  request,
-}: ActionFunctionArgs) => {
+export const action = async ({ request, context }: Route.ActionArgs) => {
+  const user = context.get(userContext);
   const formData = await request.formData();
   switch (formData.get("_action")) {
     case "createShelf":
-      return createShelf();
+      return createShelf(user.id);
     case "deleteShelf": {
       return validateForm(
         formData,
         deleteShelfSchema,
-        (data) => deleteShelf(data.shelfId),
+        async (parsedData) => {
+          const shelf = await getShelf(parsedData.shelfId);
+          if (shelf && shelf.userId !== user.id) {
+            throw data(
+              {
+                message: "This shelf is not yours, so you cannot delete it.",
+              },
+              { status: 401 },
+            );
+          }
+          return deleteShelf(parsedData.shelfId);
+        },
         (errors) => data({ errors }, { status: 400 }),
       );
     }
@@ -74,7 +91,18 @@ export const action: ActionFunction = async ({
       return validateForm(
         formData,
         saveShelfNameSchema,
-        (data) => saveShelfName(data.shelfId, data.shelfName),
+        async (parsedData) => {
+          const shelf = await getShelf(parsedData.shelfId);
+          if (shelf && shelf.userId !== user.id) {
+            throw data(
+              {
+                message: "This shelf is not yours, so you cannot change it.",
+              },
+              { status: 401 },
+            );
+          }
+          return saveShelfName(parsedData.shelfId, parsedData.shelfName);
+        },
         (errors) => data({ errors }, { status: 400 }),
       );
     }
@@ -82,7 +110,7 @@ export const action: ActionFunction = async ({
       return validateForm(
         formData,
         createShelfItemSchema,
-        (data) => createShelfItem(data.shelfId, data.itemName),
+        (data) => createShelfItem(user.id, data.shelfId, data.itemName),
         (errors) => data({ errors }, { status: 400 }),
       );
     }
@@ -90,7 +118,19 @@ export const action: ActionFunction = async ({
       return validateForm(
         formData,
         deleteShelfItemSchema,
-        (data) => deleteShelfItem(data.itemId),
+        async (parsedData) => {
+          const item = await getShelfItem(parsedData.itemId);
+          if (item && item.userId !== user.id) {
+            throw data(
+              {
+                message:
+                  "This shelf item is not yours, so you cannot delete it.",
+              },
+              { status: 401 },
+            );
+          }
+          return deleteShelfItem(parsedData.itemId);
+        },
         (errors) => data({ errors }, { status: 400 }),
       );
     }
@@ -402,3 +442,21 @@ function createItemId() {
 }
 
 export default Pantry;
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div className="bg-red-600 text-white rounded-md p-4">
+        <h1 className="mb-2">
+          {error.status} - {error.statusText}
+        </h1>
+        <p>{error.data.message}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-red-600 text-white rounded-md p-4">
+      <h1 className="mb-2">An unexpected error occurred.</h1>
+    </div>
+  );
+}

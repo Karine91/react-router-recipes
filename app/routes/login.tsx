@@ -9,15 +9,16 @@ import { commitSession, getSession } from "~/sessions";
 import { generateMagicLink, sendMagicLinkEmail } from "~/magic-links.server";
 import { v4 as uuid } from "uuid";
 import { PrimaryInput } from "~/components/forms/PrimaryInput";
+import { requireLoggedOutUserMiddleware } from "~/middleware/auth";
 
 const loginSchema = z.object({
   email: z.email(),
 });
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const cookieHeader = request.headers.get("cookie");
-  // const session = await getSession(cookieHeader);
-  // console.log("session data: ", session.data);
+export const middleware = [requireLoggedOutUserMiddleware];
+
+// need this to make sure middleware runs during client side navigation
+export function loader() {
   return null;
 }
 

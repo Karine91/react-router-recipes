@@ -1,5 +1,8 @@
 import { NavLink, Outlet } from "react-router";
 import clsx from "clsx";
+import { requireLoggedInUserMiddleware } from "~/middleware/auth";
+
+export const middleware = [requireLoggedInUserMiddleware];
 
 const App = () => {
   return (
