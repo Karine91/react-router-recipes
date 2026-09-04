@@ -1,4 +1,5 @@
 import {
+  data,
   isRouteErrorResponse,
   Link,
   Links,
@@ -6,6 +7,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
   useMatches,
   useRouteError,
 } from "react-router";
@@ -19,6 +21,8 @@ import { DiscoverIcon } from "./components/icons/Discover";
 import { RecipeBookIcon } from "./components/icons/RecipeBook";
 import { SettingsIcon } from "./components/icons/Settings";
 import { LoginIcon } from "./components/icons/Login";
+import { getCurrentUser } from "../utils/auth.server";
+import { LogoutIcon } from "./components/icons/Logout";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -63,7 +67,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const user = await getCurrentUser(request);
+  return data({ isLoggedIn: user !== null });
+};
+
 export default function App() {
+  const data = useLoaderData<typeof loader>();
   const matches = useMatches();
   useEffect(() => {
     console.log(matches);
@@ -81,14 +91,22 @@ export default function App() {
           <AppNavLink to="/discover">
             <DiscoverIcon />
           </AppNavLink>
-          <AppNavLink to="/app">
-            <RecipeBookIcon />
-          </AppNavLink>
+          {data.isLoggedIn && (
+            <AppNavLink to="/app">
+              <RecipeBookIcon />
+            </AppNavLink>
+          )}
         </ul>
         <ul>
-          <AppNavLink to="/login">
-            <LoginIcon />
-          </AppNavLink>
+          {data.isLoggedIn ? (
+            <AppNavLink to="/logout">
+              <LogoutIcon />
+            </AppNavLink>
+          ) : (
+            <AppNavLink to="/login">
+              <LoginIcon />
+            </AppNavLink>
+          )}
         </ul>
       </nav>
       <div className="p-4 w-full md:w-[calc(100%-4rem)]">

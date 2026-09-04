@@ -6,8 +6,10 @@ export default [
   route("/app", "routes/app.tsx", [
     index("routes/app/index.tsx"),
     route("pantry", "routes/app/pantry.tsx"),
+    route("recipes", "routes/app/recipes.tsx"),
   ]),
   route("login", "routes/login.tsx"),
+  route("logout", "routes/logout.tsx"),
   route("/validate-magic-link", "routes/validate-magic-link.tsx"),
   route("/settings", "routes/settings.tsx", [
     route("profile", "routes/settings/profile.tsx"),

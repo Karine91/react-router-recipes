@@ -1,4 +1,4 @@
-import db from "../../db.server";
+import db from "~/db.server";
 import { handleDelete } from "./utils";
 
 export function getAllShelves(userId: string, query: string | null) {

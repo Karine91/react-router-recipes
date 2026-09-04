@@ -1,15 +1,24 @@
 import clsx from "clsx";
+import { useEffect, useRef, useState } from "react";
 import {
-  useLoaderData,
-  useSearchParams,
-  Form,
-  useNavigation,
-  useFetcher,
   data,
   isRouteErrorResponse,
+  useFetcher,
+  useLoaderData,
 } from "react-router";
+import z from "zod";
+import { DeleteButton, PrimaryButton } from "~/components/forms/Button";
+import { ErrorMessage } from "~/components/forms/ErrorMessage";
+import SearchBar from "~/components/forms/SearchBar";
 import { PlusIcon } from "~/components/icons/Plus";
-import { SearchIcon } from "~/components/icons/Search";
+import { SaveIcon } from "~/components/icons/Save";
+import { TrashIcon } from "~/components/icons/Trash";
+import { userContext } from "~/middleware/auth";
+import {
+  createShelfItem,
+  deleteShelfItem,
+  getShelfItem,
+} from "~/models/pantry-item.server";
 import {
   createShelf,
   deleteShelf,
@@ -17,21 +26,9 @@ import {
   getShelf,
   saveShelfName,
 } from "~/models/pantry-shelf.server";
-import { DeleteButton, PrimaryButton } from "~/components/forms/Button";
-import { useEffect, useRef, useState } from "react";
-import { SaveIcon } from "~/components/icons/Save";
-import z from "zod";
-import { validateForm } from "../../../utils/validation";
-import { ErrorMessage } from "~/components/forms/ErrorMessage";
-import {
-  createShelfItem,
-  deleteShelfItem,
-  getShelfItem,
-} from "~/models/pantry-item.server";
-import { TrashIcon } from "~/components/icons/Trash";
 import { useIsHydrated, useServerLayoutEffect } from "../../../utils/misc";
+import { validateForm } from "../../../utils/validation";
 import type { Route } from "./+types";
-import { userContext } from "~/middleware/auth";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -141,13 +138,10 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
 const Pantry = () => {
   const data = useLoaderData<typeof loader>();
-  const [searchParams] = useSearchParams();
-  const navigation = useNavigation();
   const createShelfFetcher = useFetcher();
 
   const containerRef = useRef<HTMLUListElement>(null);
 
-  const isSearching = navigation.formData?.has("q");
   const isCreatingShelf =
     createShelfFetcher.formData?.get("_action") === "createShelf";
 
@@ -159,26 +153,8 @@ const Pantry = () => {
 
   return (
     <div>
-      <createShelfFetcher.Form
-        className={clsx(
-          "flex border-2 border-gray-300 rounded-md",
-          "focus-within:border-primary md:w-80",
-          isSearching && "animate-pulse",
-        )}
-      >
-        <button type="submit" className="px-2 mr-1">
-          <SearchIcon />
-        </button>
-        <input
-          type="text"
-          name="q"
-          defaultValue={searchParams.get("q") || ""}
-          autoComplete="off"
-          placeholder="Search Shelves..."
-          className="w-full py-3 px-2 outline-none"
-        />
-      </createShelfFetcher.Form>
-      <Form method="post">
+      <SearchBar className="md:w-80" placeholder="Search Shelves..." />
+      <createShelfFetcher.Form method="post">
         <PrimaryButton
           name="_action"
           value="createShelf"
@@ -190,7 +166,7 @@ const Pantry = () => {
             {isCreatingShelf ? "Creating Shelf" : "Create Shelf"}
           </span>
         </PrimaryButton>
-      </Form>
+      </createShelfFetcher.Form>
       <ul
         className={clsx(
           "flex gap-8 overflow-x-auto mt-4 pb-4",

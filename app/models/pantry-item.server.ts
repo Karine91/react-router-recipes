@@ -1,4 +1,4 @@
-import db from "../../db.server";
+import db from "~/db.server";
 import { handleDelete } from "./utils";
 
 export function createShelfItem(userId: string, shelfId: string, name: string) {
