@@ -7,10 +7,22 @@ import {
   RecipeListWrapper,
   RecipePageWrapper,
 } from "~/components/recipes";
-import { data, Form, NavLink, Outlet, redirect } from "react-router";
+import {
+  data,
+  Form,
+  NavLink,
+  Outlet,
+  redirect,
+  useLocation,
+  useNavigation,
+} from "react-router";
 import SearchBar from "~/components/forms/SearchBar";
 import { PrimaryButton } from "~/components/forms/Button";
 import { PlusIcon } from "~/components/icons/Plus";
+
+export function headers({ loaderHeaders }: Route.HeadersArgs) {
+  return loaderHeaders;
+}
 
 export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const user = context.get(userContext);
@@ -20,12 +32,20 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const recipes = await db.recipe.findMany({
     where: { userId: user.id, name: { contains: q, mode: "insensitive" } },
     select: { name: true, totalTime: true, imageUrl: true, id: true },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   });
 
-  return data({ recipes });
+  return data(
+    { recipes },
+    {
+      headers: {
+        "Cache-Control": "max-age=5",
+      },
+    },
+  );
 };
 
-export const action = async ({ context }: Route.ActionArgs) => {
+export const action = async ({ context, request }: Route.ActionArgs) => {
   const user = context.get(userContext);
 
   const recipe = await db.recipe.create({
@@ -38,13 +58,17 @@ export const action = async ({ context }: Route.ActionArgs) => {
     },
   });
 
-  return redirect(`/app/recipes/${recipe.id}`);
+  const url = new URL(request.url);
+  url.pathname = `/app/recipes/${recipe.id}`;
+  return redirect(url.toString());
 };
 
 export default function Recipes({
   loaderData: { recipes },
 }: Route.ComponentProps) {
-  console.log(recipes);
+  const location = useLocation();
+  const navigation = useNavigation();
+
   return (
     <RecipePageWrapper>
       <RecipeListWrapper>
@@ -58,22 +82,30 @@ export default function Recipes({
           </PrimaryButton>
         </Form>
         <ul>
-          {recipes.map((recipe) => (
-            <li className="my-4" key={recipe.id}>
-              <NavLink reloadDocument to={recipe.id}>
-                {({ isActive }) => {
-                  return (
-                    <RecipeCard
-                      name={recipe.name}
-                      totalTime={recipe.totalTime}
-                      imageUrl={recipe.imageUrl}
-                      isActive={isActive}
-                    />
-                  );
-                }}
-              </NavLink>
-            </li>
-          ))}
+          {recipes.map((recipe) => {
+            const isLoading = navigation.location?.pathname.endsWith(recipe.id);
+
+            return (
+              <li className="my-4" key={recipe.id}>
+                <NavLink
+                  prefetch="intent"
+                  to={{ pathname: recipe.id, search: location.search }}
+                >
+                  {({ isActive }) => {
+                    return (
+                      <RecipeCard
+                        name={recipe.name}
+                        totalTime={recipe.totalTime}
+                        imageUrl={recipe.imageUrl}
+                        isActive={isActive}
+                        isLoading={isLoading}
+                      />
+                    );
+                  }}
+                </NavLink>
+              </li>
+            );
+          })}
         </ul>
       </RecipeListWrapper>
       <RecipeDetailWrapper>

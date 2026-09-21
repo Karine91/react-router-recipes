@@ -29,6 +29,7 @@ import {
 import { useIsHydrated, useServerLayoutEffect } from "../../../utils/misc";
 import { validateForm } from "../../../utils/validation";
 import type { Route } from "./+types";
+import Input from "~/components/forms/Input";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -214,16 +215,11 @@ function Shelf({ shelf }: ShelfProps) {
     >
       <saveShelfNameFetcher.Form method="post" className="flex">
         <div className="w-full mb-2 peer">
-          <input
+          <Input
             type="text"
             required
-            className={clsx(
-              "text-2xl font-extrabold w-full outline-none",
-              "border-b-2 focus:border-b-primary border-b-background",
-              saveShelfNameFetcher.data?.errors?.shelfName
-                ? "border-b-red-600"
-                : "",
-            )}
+            error={saveShelfNameFetcher.data?.errors?.shelfName}
+            className={"text-2xl font-extrabold"}
             defaultValue={shelf.name}
             name="shelfName"
             placeholder="Shelf name"
@@ -239,7 +235,7 @@ function Shelf({ shelf }: ShelfProps) {
                 { method: "post" },
               )
             }
-          />{" "}
+          />
           <ErrorMessage>
             {saveShelfNameFetcher.data?.errors?.shelfName}
           </ErrorMessage>
