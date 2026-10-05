@@ -13,12 +13,17 @@ import {
   NavLink,
   Outlet,
   redirect,
+  useFetcher,
   useLocation,
   useNavigation,
 } from "react-router";
 import SearchBar from "~/components/forms/SearchBar";
 import { PrimaryButton } from "~/components/forms/Button";
 import { PlusIcon } from "~/components/icons/Plus";
+import {
+  useSaveRecipeNameFetcher,
+  useSaveRecipeTotalTimeFetcher,
+} from "../../../utils/hooks";
 
 export function headers({ loaderHeaders }: Route.HeadersArgs) {
   return loaderHeaders;
@@ -83,28 +88,7 @@ export default function Recipes({
         </Form>
         <ul>
           {recipes.map((recipe) => {
-            const isLoading = navigation.location?.pathname.endsWith(recipe.id);
-
-            return (
-              <li className="my-4" key={recipe.id}>
-                <NavLink
-                  prefetch="intent"
-                  to={{ pathname: recipe.id, search: location.search }}
-                >
-                  {({ isActive }) => {
-                    return (
-                      <RecipeCard
-                        name={recipe.name}
-                        totalTime={recipe.totalTime}
-                        imageUrl={recipe.imageUrl}
-                        isActive={isActive}
-                        isLoading={isLoading}
-                      />
-                    );
-                  }}
-                </NavLink>
-              </li>
-            );
+            return <RecipeListItem key={recipe.id} recipe={recipe} />;
           })}
         </ul>
       </RecipeListWrapper>
@@ -112,5 +96,48 @@ export default function Recipes({
         <Outlet />
       </RecipeDetailWrapper>
     </RecipePageWrapper>
+  );
+}
+
+type RecipeListItemProps = {
+  recipe: {
+    id: string;
+    name: string;
+    totalTime: string;
+    imageUrl: string;
+  };
+};
+
+function RecipeListItem({ recipe }: RecipeListItemProps) {
+  const navigation = useNavigation();
+  const location = useLocation();
+  const isLoading = navigation.location?.pathname.endsWith(recipe.id);
+  const saveNameFetcher = useSaveRecipeNameFetcher(recipe.id);
+  const saveTotalTimeFetcher = useSaveRecipeTotalTimeFetcher(recipe.id);
+
+  const optimisticData = {
+    name: saveNameFetcher.formData?.get("name")?.toString(),
+    totalTime: saveTotalTimeFetcher.formData?.get("totalTime")?.toString(),
+  };
+
+  return (
+    <li className="my-4" key={recipe.id}>
+      <NavLink
+        prefetch="intent"
+        to={{ pathname: recipe.id, search: location.search }}
+      >
+        {({ isActive }) => {
+          return (
+            <RecipeCard
+              name={optimisticData.name ?? recipe.name}
+              totalTime={optimisticData.totalTime ?? recipe.totalTime}
+              imageUrl={recipe.imageUrl}
+              isActive={isActive}
+              isLoading={isLoading}
+            />
+          );
+        }}
+      </NavLink>
+    </li>
   );
 }

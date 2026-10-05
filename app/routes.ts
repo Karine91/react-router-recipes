@@ -7,11 +7,17 @@ export default [
     index("routes/app/index.tsx"),
     route("pantry", "routes/app/pantry.tsx"),
     route("recipes", "routes/app/recipes.tsx", [
-      route(":recipeId", "routes/app/recipes/$recipeId.tsx"),
+      route(":recipeId", "routes/app/recipes/$recipeId.tsx", [
+        route(
+          "update-meal-plan",
+          "routes/app/recipes/$recipeId/update-meal-plan.tsx",
+        ),
+      ]),
     ]),
   ]),
   route("login", "routes/login.tsx"),
   route("logout", "routes/logout.tsx"),
+  route("recipes/:recipeId/image", "routes/recipe-image.tsx"),
   route("/validate-magic-link", "routes/validate-magic-link.tsx"),
   route("/settings", "routes/settings.tsx", [
     route("profile", "routes/settings/profile.tsx"),

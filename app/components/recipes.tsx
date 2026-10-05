@@ -1,5 +1,5 @@
 import React from "react";
-import classNames from "classnames";
+import clsx from "clsx";
 import { TimeIcon } from "~/components/icons/Time";
 import { useParams } from "react-router";
 
@@ -17,7 +17,7 @@ export function RecipeListWrapper({ children }: RecipeListWrapperProps) {
   const params = useParams();
   return (
     <div
-      className={classNames(
+      className={clsx(
         "lg:block lg:w-1/3 lg:pr-4 overflow-auto",
         params.recipeId ? "hidden" : "",
       )}
@@ -74,7 +74,7 @@ export function RecipeCard({
   const delayedLoading = useDelayedBool(isLoading, 500);
   return (
     <div
-      className={classNames(
+      className={clsx(
         "group flex shadow-md rounded-md border-2",
         "hover:text-primary hover:border-primary",
         {
@@ -97,7 +97,7 @@ export function RecipeCard({
           {delayedLoading ? "..." : ""}
         </h3>
         <div
-          className={classNames(
+          className={clsx(
             "flex font-light",
             "group-hover:text-primary-light",
             {

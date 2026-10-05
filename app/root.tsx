@@ -59,9 +59,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="md:flex h-screen bg-background">
-        {children}
-        <ScrollRestoration />
-        <Scripts />
+        <div id="root" className="md:flex md:h-screen">
+          {children}
+          <ScrollRestoration />
+          <Scripts />
+        </div>
       </body>
     </html>
   );

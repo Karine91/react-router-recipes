@@ -35,3 +35,11 @@ export function validateForm<T, Success, Error>(
   }
   return successFn(result.data);
 }
+
+
+export function getErrors(data: unknown): FieldErrors | undefined {
+  if (typeof data === "object" && data !== null && "errors" in data) {
+    return data.errors as FieldErrors;
+  }
+  return undefined;
+}

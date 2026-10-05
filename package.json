@@ -14,6 +14,9 @@
     "@react-router/dev": "^8.0.1",
     "@react-router/node": "^8.0.1",
     "@react-router/serve": "^8.0.1",
+    "@remix-run/file-storage": "^0.13.8",
+    "@remix-run/form-data-parser": "^0.17.7",
+    "@types/react-modal": "^3.16.3",
     "clsx": "^2.1.1",
     "cryptr": "^6.4.0",
     "form-data": "^4.0.6",
@@ -22,6 +25,7 @@
     "pg": "^8.22.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-modal": "^3.16.3",
     "react-router": "^8.0.1",
     "uuid": "^14.0.1",
     "zod": "^4.4.3"
@@ -39,5 +43,5 @@
     "typescript": "^5.9.3",
     "vite": "^8.0.3"
   },
-  "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
+  "packageManager": "pnpm@12.8.1+sha512.f64ba907507f5ceafe06c8d38e6052d0179444580ec1279ddd5bfc11cb48aa8a2644b66598e07e761da84872a9fc57d5f902b87fa49d024198d558612aabbe45"
 }
