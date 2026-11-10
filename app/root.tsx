@@ -10,6 +10,7 @@ import {
   useLoaderData,
   useMatches,
   useRouteError,
+  type ShouldRevalidateFunctionArgs,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -23,6 +24,7 @@ import { SettingsIcon } from "./components/icons/Settings";
 import { LoginIcon } from "./components/icons/Login";
 import { getCurrentUser } from "../utils/auth.server";
 import { LogoutIcon } from "./components/icons/Logout";
+import { mealPlanModalIsOpeningOrClosing } from "../utils/revalidation";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -49,6 +51,10 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+export function shouldRevalidate(arg: ShouldRevalidateFunctionArgs) {
+  return !mealPlanModalIsOpeningOrClosing(arg);
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -59,7 +65,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="md:flex h-screen bg-background">
-        <div id="root" className="md:flex md:h-screen">
+        <div id="root" className="md:flex md:h-screen grow">
           {children}
           <ScrollRestoration />
           <Scripts />

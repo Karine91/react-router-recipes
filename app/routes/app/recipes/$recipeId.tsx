@@ -4,9 +4,12 @@ import {
   data,
   Form,
   isRouteErrorResponse,
+  Link,
   Outlet,
   redirect,
   useFetcher,
+  useOutletContext,
+  type ShouldRevalidateFunctionArgs,
 } from "react-router";
 import Input from "~/components/forms/Input";
 import { ErrorMessage } from "~/components/forms/ErrorMessage";
@@ -31,6 +34,9 @@ import {
 
 import { type FileUpload, parseFormData } from "@remix-run/form-data-parser";
 import { fileStorage, getStorageKey } from "~/recipe-image-storage.server";
+import { CalendarIcon } from "~/components/icons/Calendar";
+import { mealPlanModalIsOpeningOrClosing } from "../../../../utils/revalidation";
+import { canChangeRecipe } from "../../../../utils/abilities.server";
 
 export function headers({ loaderHeaders }: Route.HeadersArgs) {
   return loaderHeaders;
@@ -66,6 +72,10 @@ export const loader = async ({ params, context }: Route.LoaderArgs) => {
     },
   );
 };
+
+export function shouldRevalidate(arg: ShouldRevalidateFunctionArgs) {
+  return !mealPlanModalIsOpeningOrClosing(arg);
+}
 
 const saveNameSchema = z.object({
   name: z.string().min(1, "Name cannot be blank"),
@@ -118,17 +128,7 @@ const createIngredientSchema = z.object({
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const recipeId = params.recipeId;
-  const user = context.get(userContext);
-  const recipe = await db.recipe.findUnique({
-    where: {
-      id: recipeId,
-      userId: user.id,
-    },
-  });
-
-  if (!recipe) {
-    throw data({ message: "Recipe not found" }, { status: 404 });
-  }
+  await canChangeRecipe(context, recipeId);
 
   const uploadHandler = async (fileUpload: FileUpload) => {
     if (
@@ -306,6 +306,13 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   }
 }
 
+export function useRecipeContext() {
+  return useOutletContext<{
+    recipeName: string;
+    mealPlanMultiplier: number | null;
+  }>();
+}
+
 export default function RecipeDetail({
   loaderData: { recipe },
   actionData,
@@ -381,22 +388,36 @@ export default function RecipeDetail({
 
   return (
     <>
-      <Outlet />
+      <Outlet
+        context={{
+          recipeName: recipe?.name,
+          mealPlanMultiplier: recipe?.mealPlanMultiplier,
+        }}
+      />
       <Form method="post" reloadDocument encType="multipart/form-data">
         <button name="_action" value="saveRecipe" className="hidden" />
-        <div className="mb-2">
-          <Input
-            type="text"
-            placeholder="Recipe Name"
-            autoComplete="off"
-            className="text-2xl font-extrabold"
-            name="name"
-            defaultValue={recipe?.name}
-            key={recipe?.id}
-            error={!!(saveNameErrors?.name || errors?.name)}
-            onChange={(e) => saveName(e.target.value)}
-          />
-          <ErrorMessage>{saveNameErrors?.name || errors?.name}</ErrorMessage>
+        <div className="flex mb-2">
+          <Link
+            to="update-meal-plan"
+            className="flex flex-col justify-center"
+            replace
+          >
+            <CalendarIcon />
+          </Link>
+          <div className="ml-2 grow">
+            <Input
+              type="text"
+              placeholder="Recipe Name"
+              autoComplete="off"
+              className="text-2xl font-extrabold"
+              name="name"
+              defaultValue={recipe?.name}
+              key={recipe?.id}
+              error={!!(saveNameErrors?.name || errors?.name)}
+              onChange={(e) => saveName(e.target.value)}
+            />
+            <ErrorMessage>{saveNameErrors?.name || errors?.name}</ErrorMessage>
+          </div>
         </div>
         <div className="flex">
           <TimeIcon />

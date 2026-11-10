@@ -16,6 +16,7 @@ import {
   useFetcher,
   useLocation,
   useNavigation,
+  type ShouldRevalidateFunctionArgs,
 } from "react-router";
 import SearchBar from "~/components/forms/SearchBar";
 import { PrimaryButton } from "~/components/forms/Button";
@@ -24,6 +25,7 @@ import {
   useSaveRecipeNameFetcher,
   useSaveRecipeTotalTimeFetcher,
 } from "../../../utils/hooks";
+import { mealPlanModalIsOpeningOrClosing } from "../../../utils/revalidation";
 
 export function headers({ loaderHeaders }: Route.HeadersArgs) {
   return loaderHeaders;
@@ -67,6 +69,10 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   url.pathname = `/app/recipes/${recipe.id}`;
   return redirect(url.toString());
 };
+
+export function shouldRevalidate(arg: ShouldRevalidateFunctionArgs) {
+  return !mealPlanModalIsOpeningOrClosing(arg);
+}
 
 export default function Recipes({
   loaderData: { recipes },
